@@ -6,17 +6,42 @@ services:
       - '1883:1883'
       - '9001:9001'
     volumes:
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    command: ['-config.file=/etc/tempo.yaml']
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+    ports:
+      - '3200:3200' # Tempo UI/API
+      # 내부에서만 접근, 포트 바인딩 제거
+    expose:
+      - '4317' # 다른 컨테이너가 접근 가능하게 expose만
 
   otel-collector:
-    image: otel/opentelemetry-collector:0.93.0
+    image: otel/opentelemetry-collector-contrib:0.93.0
     container_name: otel_collector
     command: ['--config=/etc/otel-collector-config.yaml']
     volumes:
-      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - '4318:4318'
-      - '4317:4317'
+      - '4318:4318' # OTLP HTTP
+      - '4317:4317' # OTLP gRPC
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./config/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+    depends_on:
+      - tempo
 
   app:
     build:
@@ -29,7 +54,8 @@ services:
       - mqtt
       - otel-collector
     volumes:
-      - ./config:/app/config
+      - ./config/config.toml:/app/config/config.toml
+      - ./config/logger.toml:/app/config/logger.toml
     command: >
       simulator
       --config /app/config/config.toml

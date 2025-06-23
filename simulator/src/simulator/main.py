@@ -12,7 +12,7 @@ from prometheus_client import make_wsgi_app, start_http_server
 from starlette.middleware.wsgi import WSGIMiddleware
 
 from simulator.configs import AppConfig
-from simulator.observability import JSONFormatter, init_tracing
+from simulator.observability import JSONFormatter, init_tracing, get_tracer
 from simulator.router import create_router
 from simulator.simulator import SimulatorController, default_payload
 
@@ -82,6 +82,9 @@ def init_app(
             )
             start_http_server(config.observability.prometheus_port)
             logger.info("Prometheus 메트릭 서버 시작")
+
+            tracer = get_tracer()
+            app.state.simulator.set_tracer(tracer)
 
         # MQTT
         client = mqtt_client or mqtt.Client(protocol=mqtt.MQTTv311)
