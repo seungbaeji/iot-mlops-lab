@@ -1,0 +1,36 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.93.0
+    container_name: otel_collector
+    command: ['--config=/etc/otel-collector-config.yaml']
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - '4318:4318'
+      - '4317:4317'
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iot-simulator
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mqtt
+      - otel-collector
+    volumes:
+      - ./config:/app/config
+    command: >
+      simulator
+      --config /app/config/config.toml
+      --log-config /app/config/logger.toml
