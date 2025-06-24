@@ -25,7 +25,9 @@ def default_payload(device_id: str) -> dict:
 
 class PayloadPublisher:
     def __init__(
-        self, mqtt_config: MQTTConfig, mqtt_client: Optional[mqtt.Client] = None
+        self,
+        mqtt_config: MQTTConfig,
+        mqtt_client: Optional[mqtt.Client] = None,
     ):
         self._mqtt_config = mqtt_config
         self._mqtt_client = mqtt_client
@@ -141,9 +143,13 @@ class SimulatorController:
             raise
 
     async def _simulate_once(self, device_id: str) -> None:
-        if self._tracer:
-            with self._tracer.start_as_current_span("publish_sensor_data") as span:
+        if self.tracer:
+            with self.tracer.start_as_current_span("publish_sensor_data") as span:
                 span.set_attribute("device_id", device_id)
+                span.set_attribute("payload.size", len(str(payload)))
+                span.set_attribute("mqtt.topic", self._publisher.topic)
+                span.set_attribute("mqtt.broker", self._publisher.host)
+
                 payload = self._payload_generator(device_id)
                 self._publisher.publish(device_id, payload)
         else:

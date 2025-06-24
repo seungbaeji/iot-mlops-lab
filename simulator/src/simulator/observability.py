@@ -2,16 +2,20 @@
 import json
 import logging
 import traceback
+from contextlib import contextmanager
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
-    OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import (NoOpTracerProvider, SpanContext, Tracer,
-                                 get_current_span)
+from opentelemetry.trace import (
+    NoOpTracerProvider,
+    SpanContext,
+    Tracer,
+    get_current_span,
+)
 from prometheus_client import Counter, Gauge
 
 
@@ -43,6 +47,17 @@ def get_tracer(service_name: str = "iot-simulator") -> Tracer:
     except Exception:
         trace.set_tracer_provider(NoOpTracerProvider())
         return trace.get_tracer(service_name)
+
+
+@contextmanager
+def traced_span(tracer: Optional[Tracer], name: str, **attrs):
+    if tracer:
+        with tracer.start_as_current_span(name) as span:
+            for k, v in attrs.items():
+                span.set_attribute(k, v)
+            yield span
+    else:
+        yield None
 
 
 class Metrics:

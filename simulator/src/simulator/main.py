@@ -12,7 +12,7 @@ from prometheus_client import make_wsgi_app, start_http_server
 from starlette.middleware.wsgi import WSGIMiddleware
 
 from simulator.configs import AppConfig
-from simulator.observability import JSONFormatter, init_tracing, get_tracer
+from simulator.observability import JSONFormatter, get_tracer, init_tracing
 from simulator.router import create_router
 from simulator.simulator import SimulatorController, default_payload
 
