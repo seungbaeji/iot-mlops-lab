@@ -8,6 +8,7 @@ from typing import Optional
 
 import paho.mqtt.client as mqtt
 from fastapi import FastAPI
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_client import make_wsgi_app, start_http_server
 from starlette.middleware.wsgi import WSGIMiddleware
 
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 app: FastAPI = FastAPI()
+FastAPIInstrumentor.instrument_app(app)
 app.mount("/metrics", WSGIMiddleware(make_wsgi_app()))
 
 

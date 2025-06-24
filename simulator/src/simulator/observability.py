@@ -2,20 +2,17 @@
 import json
 import logging
 import traceback
-from contextlib import contextmanager
-from typing import Optional
+from contextlib import nullcontext
+from typing import ContextManager, Optional
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
+    OTLPSpanExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import (
-    NoOpTracerProvider,
-    SpanContext,
-    Tracer,
-    get_current_span,
-)
+from opentelemetry.trace import (NoOpTracerProvider, Span, SpanContext, Tracer,
+                                 get_current_span)
 from prometheus_client import Counter, Gauge
 
 
@@ -49,15 +46,10 @@ def get_tracer(service_name: str = "iot-simulator") -> Tracer:
         return trace.get_tracer(service_name)
 
 
-@contextmanager
-def traced_span(tracer: Optional[Tracer], name: str, **attrs):
+def get_span_context(tracer: Optional[Tracer], name: str) -> ContextManager[Span]:
     if tracer:
-        with tracer.start_as_current_span(name) as span:
-            for k, v in attrs.items():
-                span.set_attribute(k, v)
-            yield span
-    else:
-        yield None
+        return tracer.start_as_current_span(name)
+    return nullcontext(get_current_span())
 
 
 class Metrics:
@@ -81,6 +73,9 @@ class JSONFormatter(logging.Formatter):
         trace_id = (
             format(ctx.trace_id, "032x") if ctx and ctx.is_valid else "unknown-trace"
         )
+        span_id = (
+            format(ctx.span_id, "016x") if ctx and ctx.is_valid else "unknown-span"
+        )
 
         log_data = {
             "timestamp": self.formatTime(record),
@@ -88,6 +83,7 @@ class JSONFormatter(logging.Formatter):
             "message": record.getMessage(),
             "service": record.name,
             "trace_id": getattr(record, "trace_id", trace_id),
+            "span_id": getattr(record, "span_id", span_id),
             "user_id": getattr(record, "user_id", "unknown-user"),
             "logger_name": record.name,
             "module": record.module,

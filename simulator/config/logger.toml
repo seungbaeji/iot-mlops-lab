@@ -49,7 +49,7 @@ propagate = false
 
 [loggers.simulator]
 level = "DEBUG"
-handlers = ["console"]
+handlers = ["console", "file"]
 propagate = false
 
 [root]

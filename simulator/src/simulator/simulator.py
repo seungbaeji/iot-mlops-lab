@@ -9,7 +9,7 @@ import paho.mqtt.client as mqtt
 from opentelemetry.trace import Tracer
 
 from simulator.configs import AppConfig, MQTTConfig, SimulationConfig
-from simulator.observability import Metrics, get_tracer
+from simulator.observability import Metrics, get_span_context, get_tracer
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,14 @@ class PayloadPublisher:
             logger.debug(f"[{device_id}] Published payload.")
         except Exception as e:
             logger.warning(f"[{device_id}] Failed to publish: {e}")
+
+    @property
+    def topic(self):
+        return self._mqtt_config.topic
+
+    @property
+    def host(self):
+        return self._mqtt_config.host
 
 
 class DeviceManager:
@@ -143,18 +151,15 @@ class SimulatorController:
             raise
 
     async def _simulate_once(self, device_id: str) -> None:
-        if self.tracer:
-            with self.tracer.start_as_current_span("publish_sensor_data") as span:
-                span.set_attribute("device_id", device_id)
-                span.set_attribute("payload.size", len(str(payload)))
-                span.set_attribute("mqtt.topic", self._publisher.topic)
-                span.set_attribute("mqtt.broker", self._publisher.host)
-
-                payload = self._payload_generator(device_id)
-                self._publisher.publish(device_id, payload)
-        else:
+        with get_span_context(self.tracer, "publish_sensor_data") as span:
             payload = self._payload_generator(device_id)
             self._publisher.publish(device_id, payload)
+
+            span.set_attribute("device_id", device_id)
+            span.set_attribute("payload.size", len(str(payload)))
+            span.set_attribute("mqtt.topic", self._publisher.topic)
+            span.set_attribute("mqtt.broker", self._publisher.host)
+
 
     def start_device(self, device_id: str) -> None:
         if self._device_manager.is_device_running(device_id):
