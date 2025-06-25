@@ -1,0 +1,42 @@
+version = 1
+disable_existing_loggers = true
+
+# =========================
+# Formatters
+# =========================
+
+[formatters.json]
+class = "iot_subscriber.JSONFormatter"
+# timestamp 포맷은 Formatter 클래스 내부에서 정의됨
+
+# =========================
+# Handlers
+# =========================
+
+[handlers.console]
+class = "logging.StreamHandler"
+level = "DEBUG"
+formatter = "json"
+stream = "ext://sys.stdout"
+
+[handlers.file]
+class = "logging.handlers.RotatingFileHandler"
+level = "INFO"
+formatter = "json"
+filename = "./tmp/iot-subscriber.log"
+maxBytes = 10485760  # 10MB
+backupCount = 5
+encoding = "utf-8"
+
+# =========================
+# Loggers
+# =========================
+
+[loggers.iot_subscriber]
+level = "DEBUG"
+handlers = ["console", "file"]
+propagate = false
+
+[root]
+level = "INFO"
+handlers = ["console"]

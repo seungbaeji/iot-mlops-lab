@@ -1,0 +1,23 @@
+[mqtt]
+host = "mqtt"
+port = 1883
+topic = "sensors/#"
+qos = 0
+
+[database]
+name = "iot_ml_lab"
+user = "lab_admin"
+password = "changeme"
+host = "postgresql"
+port = 5432
+
+[subscriber]
+batch_size = 250
+flush_interval = 5
+mqtt_reconn_delay_sec = 5
+error_retry_delay_sec = 5
+
+[observability]
+trace_endpoint = "http://otel-collector:4318/v1/traces"
+service_name = "iot-subscriber"
+prometheus_port = 8001
