@@ -10,6 +10,12 @@ datasources:
     jsonData:
       httpMethod: GET
       tracesToLogsV2:
-        datasourceUid: 'loki'
+        datasourceUid: "loki"
       serviceMap:
-        datasourceUid: 'Tempo'
+        datasourceUid: "Tempo"
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    isDefault: false

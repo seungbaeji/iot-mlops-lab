@@ -1,4 +1,19 @@
 services:
+
+  postgresql:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: iot_ml_lab
+      POSTGRES_USER: lab_admin
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data-pipeline/config/postgres.conf:/etc/postgresql/postgresql.conf
+      - ./data-pipeline/config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
   mqtt:
     image: eclipse-mosquitto:2.0
     container_name: mqtt
@@ -6,7 +21,7 @@ services:
       - '1883:1883'
       - '9001:9001'
     volumes:
-      - ./simulator/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./data-pipeline/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   tempo:
     image: grafana/tempo:2.4.1
@@ -14,9 +29,8 @@ services:
     command: ['-config.file=/etc/tempo.yaml']
     ports:
       - '3200:3200' # Tempo UI/API
-      # 내부에서만 접근, 포트 바인딩 제거
     expose:
-      - '4317' # 다른 컨테이너가 접근 가능하게 expose만
+      - '4317'
     volumes:
       - ./observability/config/tempo.yaml:/etc/tempo.yaml
 
@@ -30,6 +44,13 @@ services:
     volumes:
       - ./observability/config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/config/prometheus.yaml:/etc/prometheus/prometheus.yml
+
   grafana:
     image: grafana/grafana:10.4.1
     container_name: grafana
@@ -38,18 +59,20 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_LOG_LEVEL=warn
     depends_on:
       - tempo
     volumes:
       - ./observability/config/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
 
-  app:
+  iot-simulator:
     build:
       context: ./simulator
       dockerfile: Dockerfile
     container_name: iot-simulator
     ports:
       - '8000:8000'
+      - '8001'
     depends_on:
       - mqtt
       - otel-collector
@@ -57,6 +80,25 @@ services:
       - ./simulator/config/config.toml:/app/config/config.toml
       - ./simulator/config/logger.toml:/app/config/logger.toml
     command: >
-      simulator
+      iot-simulator
+      --config /app/config/config.toml
+      --log-config /app/config/logger.toml
+
+  iot-subscriber:
+    build:
+      context: ./iot-subscriber
+      dockerfile: Dockerfile
+    container_name: iot-subscriber
+    ports:
+      - "8001"
+    depends_on:
+      - mqtt
+      - postgresql
+      - otel-collector
+    volumes:
+      - ./iot-subscriber/config/config.toml:/app/config/config.toml
+      - ./iot-subscriber/config/logger.toml:/app/config/logger.toml
+    command: >
+      iot-subscriber
       --config /app/config/config.toml
       --log-config /app/config/logger.toml
