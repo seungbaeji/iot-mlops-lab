@@ -160,7 +160,6 @@ class SimulatorController:
             span.set_attribute("mqtt.topic", self._publisher.topic)
             span.set_attribute("mqtt.broker", self._publisher.host)
 
-
     def start_device(self, device_id: str) -> None:
         if self._device_manager.is_device_running(device_id):
             return

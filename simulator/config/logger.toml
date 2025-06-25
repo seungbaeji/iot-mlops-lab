@@ -48,7 +48,7 @@ handlers = ["console"]
 propagate = false
 
 [loggers.simulator]
-level = "DEBUG"
+level = "INFO"
 handlers = ["console", "file"]
 propagate = false
 
