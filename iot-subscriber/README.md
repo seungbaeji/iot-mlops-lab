@@ -1,146 +1,44 @@
-# iot-subscriber
+# IoT Subscriber
 
-The **iot-subscriber** is a core component of the IoT MLOps Lab project. It is responsible for ingesting sensor data from an MQTT broker, buffering and batching the data, and reliably storing it in a PostgreSQL database. The service is designed for production-grade observability, resilience, and extensibility.
+## Overview
 
----
+**IoT Subscriber** is a service that ingests data from an MQTT broker and pushes it to a Redis queue. Its sole responsibility is to reliably transfer incoming MQTT messages to Redis for further processing. All downstream processing (such as database storage, analytics, or preprocessing) is handled by separate services and is not part of this module.
 
-## Features
-
-- **MQTT Ingestion**: Subscribes to one or more MQTT topics and receives real-time sensor data.
-- **Batch Buffering**: Buffers incoming messages and writes them to the database in configurable batches for efficiency.
-- **Asynchronous Processing**: Fully async implementation using `asyncio` and `asyncpg` for high throughput.
-- **Resilient Connections**: Automatic reconnection logic for both MQTT and PostgreSQL.
-- **Observability**: Integrated metrics (Prometheus), tracing (OpenTelemetry/Tempo), and structured logging.
-- **Configurable**: All major parameters (MQTT, DB, batching, logging, etc.) are configurable via TOML files.
-- **Graceful Shutdown**: Handles signals for safe shutdown and resource cleanup.
-- **Testable**: Includes pytest-based test suite and sample configuration.
-
----
-
-## Directory Structure
+## Architecture
 
 ```
-iot-subscriber/
-├── config/
-│   ├── config.toml         # Main service configuration
-│   └── logger.toml         # Logging configuration
-├── src/
-│   └── iot_subscriber/
-│       ├── __init__.py
-│       ├── config.py
-│       ├── main.py
-│       ├── observability.py
-│       ├── subscriber.py
-│       └── ...
-├── tests/
-│   ├── __init__.py
-│   ├── conftest.py
-│   ├── test_config.py
-│   └── test_subscriber.py
-├── Dockerfile
-├── pyproject.toml
-├── README.md
-└── ...
++-----------+      +-----------+
+|  MQTT     | ---> |  Redis    |
+|  Broker   |      |  (Queue)  |
++-----------+      +-----------+
+                        |
+                        v
+                [Downstream Consumers]
+                (e.g. Postgres, Preprocessing, Analytics)
+                (Not part of this service)
 ```
 
----
+- **MQTT Subscriber (this service)**: Receives messages from MQTT and pushes them to Redis.
+- **Redis**: Acts as a buffer/queue, enabling multiple independent downstream consumers.
+- **Downstream Consumers**: Separate services that read from Redis and perform further processing (not included here).
+
+## Why Redis?
+
+- **Scalability**: Multiple consumers can process data in parallel.
+- **Extensibility**: New pipelines (e.g., preprocessing, ML, analytics) can be added without changing the MQTT subscriber.
+- **Fault Tolerance**: If a downstream service is down, data is safely buffered in Redis.
+- **Decoupling**: Ingestion and processing are separated, making the system more robust and maintainable.
 
 ## Getting Started
 
-### 1. Prerequisites
-
-- Python 3.12+
-- Docker & Docker Compose (for full stack integration)
-- PostgreSQL and MQTT broker (can be run via Docker Compose)
-
-### 2. Installation
-
-```bash
-# Clone the repository (if not already)
-git clone <your-repo-url>
-cd iot-subscriber
-
-# Install dependencies
-poetry install
-```
-
-### 3. Configuration
-
-Edit `config/config.toml` to set your MQTT broker, PostgreSQL, and batching parameters.  
-Edit `config/logger.toml` for logging preferences.
-
-### 4. Running the Service
-
-**Standalone (local):**
-```bash
-poetry run python -m iot_subscriber.main --config config/config.toml --log-config config/logger.toml
-```
-
-**With Docker Compose (recommended for full stack):**
-```bash
-docker compose up --build
-```
+1. Configure MQTT and Redis settings in `config.toml`.
+2. Start the IoT Subscriber service.
+3. (Optional) Deploy one or more downstream consumer services that read from Redis.
 
 ---
 
-## Configuration Example (`config.toml`)
+**Note:**
+- This service does **not** process, transform, or store data beyond pushing it to Redis.
+- All downstream processing (e.g., writing to PostgreSQL, preprocessing, analytics) must be implemented in separate modules/services.
 
-```toml
-[mqtt]
-host = "mqtt"
-port = 1883
-topic = "sensors/#"
-qos = 0
-
-[database]
-name = "iot_ml_lab"
-user = "lab_admin"
-password = "changeme"
-host = "postgresql"
-port = 5432
-
-[subscriber]
-batch_size = 20
-flush_interval = 5
-mqtt_reconn_delay_sec = 5
-error_retry_delay_sec = 5
-
-[observability]
-trace_endpoint = "http://otel-collector:4318/v1/traces"
-service_name = "iot-subscriber"
-prometheus_port = 8001
-```
-
----
-
-## Observability
-
-- **Metrics**: Exposed at `/metrics` (Prometheus format, port configurable)
-- **Tracing**: OpenTelemetry spans sent to the configured collector (e.g., Tempo)
-- **Logging**: Structured JSON logs, configurable via `logger.toml`
-
----
-
-## Health & Resilience
-
-- Automatic reconnection to MQTT and PostgreSQL on failure
-- Graceful shutdown on SIGTERM/SIGINT
-- Batch buffer with both time-based and size-based flush
-
----
-
-## Testing
-
-```bash
-poetry run pytest
-```
-
----
-
-## Acknowledgements
-
-- [asyncpg](https://github.com/MagicStack/asyncpg)
-- [aiomqtt](https://github.com/sbtinstruments/aiomqtt)
-- [OpenTelemetry](https://opentelemetry.io/)
-- [Prometheus](https://prometheus.io/)
-- [Grafana](https://grafana.com/)
+For more details, see the code and configuration files in this repository.

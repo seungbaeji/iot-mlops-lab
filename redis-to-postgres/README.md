@@ -1,6 +1,48 @@
-# redis-to-postgres
+# Redis to Postgres Worker
 
-This service consumes sensor data from a Redis queue and batch-inserts it into PostgreSQL.
+## Overview
+
+**redis-to-postgres** is a service that reads data from a Redis queue/stream and writes it to a PostgreSQL database. It is designed to be a downstream consumer in a decoupled data pipeline, enabling scalable and reliable ingestion of IoT or other event data. **Multiple redis-to-postgres workers can run in parallel for higher throughput and fault tolerance.**
+
+## Architecture
+
+```
++-----------+      +-----------+      +----------------------+
+|  MQTT     | ---> |  Redis    | ---> | redis-to-postgres    |
+|  Broker   |      |  (Queue)  |      |   (one or more)      |
++-----------+      +-----------+      +----------------------+
+                                         |
+                                         v
+                                 +------------------+
+                                 |   PostgreSQL     |
+                                 +------------------+
+```
+
+- **Redis**: Buffers incoming data from upstream producers (e.g., MQTT subscriber) and supports multiple consumers (e.g., via consumer groups or streams)
+- **redis-to-postgres (this service)**: One or more worker instances can read batches from Redis and insert them into PostgreSQL concurrently
+- **PostgreSQL**: Stores the data for analytics, reporting, or further processing
+
+## Why this pattern?
+
+- **Decoupling**: Ingestion and storage are separated, so each can scale and fail independently
+- **Reliability**: Data is buffered in Redis, preventing loss if PostgreSQL is temporarily unavailable
+- **Extensibility**: Additional consumers (e.g., for preprocessing, analytics) can be added without changing this service
+- **Scalability**: Multiple redis-to-postgres workers can run in parallel to increase throughput and provide redundancy
+
+## Getting Started
+
+1. Configure Redis and PostgreSQL settings in `config.toml`.
+2. Start one or more redis-to-postgres service instances.
+3. Ensure that upstream producers (e.g., MQTT subscriber) are pushing data to Redis.
+
+---
+
+**Note:**
+- This service does **not** ingest data from MQTT or other sources directly. It only processes data from Redis and writes to PostgreSQL.
+- For MQTT ingestion, use a separate service (e.g., IoT Subscriber).
+- You can run multiple redis-to-postgres workers in parallel for higher throughput and fault tolerance.
+
+For more details, see the code and configuration files in this repository.
 
 ## Features
 - Async, efficient batch processing
@@ -30,9 +72,3 @@ CREATE TABLE sensor_data (
     value DOUBLE PRECISION NOT NULL
 );
 ```
-```
-
----
-
-필요한 파일을 모두 복사해서 붙여넣으시면 됩니다!  
-추가로 궁금한 점이나, 다른 서비스/문서화 작업도 필요하시면 말씀해 주세요.
