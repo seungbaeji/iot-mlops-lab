@@ -5,11 +5,10 @@ import logging.config
 import tomllib
 from pathlib import Path
 
-from prometheus_client import start_http_server
-
 from iot_subscriber.config import AppConfig
 from iot_subscriber.observability import get_tracer, init_tracing
 from iot_subscriber.subscriber import SubscriberController
+from prometheus_client import start_http_server
 
 logger = logging.getLogger(__name__)
 

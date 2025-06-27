@@ -2,9 +2,32 @@ global:
   scrape_interval: 5s
 
 scrape_configs:
-  - job_name: "iot-subscriber"
-    static_configs:
-      - targets: ["iot-subscriber:8001"]
   - job_name: "iot-simulator"
     static_configs:
       - targets: ["iot-simulator:8001"]
+  - job_name: "iot-subscriber"
+    static_configs:
+      - targets: ["iot-subscriber:8001"]
+  - job_name: "redis-to-postgres"
+    static_configs:
+      - targets: ["redis-to-postgres:8011"]
+      - targets: ["redis-to-postgres:8012"]
+      - targets: ["redis-to-postgres:8013"]
+  # - job_name: "tempo"
+  #   static_configs:
+  #     - targets: ["tempo:3200"]
+  # - job_name: "otel-collector"
+  #   static_configs:
+  #     - targets: ["otel-collector:4318"]
+  # - job_name: "prometheus"
+  #   static_configs:
+  #     - targets: ["prometheus:9090"]
+  # - job_name: "grafana"
+  #   static_configs:
+  #     - targets: ["grafana:3000"]
+  # - job_name: "redis"
+  #   static_configs:
+  #     - targets: ["redis:6379"]
+  # - job_name: "postgresql"
+  #   static_configs:
+  #     - targets: ["postgresql:5432"]

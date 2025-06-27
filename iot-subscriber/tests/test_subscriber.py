@@ -2,7 +2,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from iot_subscriber.subscriber import SubscriberController
 
 

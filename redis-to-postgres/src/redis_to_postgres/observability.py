@@ -12,17 +12,13 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import (NoOpTracerProvider, Span, SpanContext, Tracer,
                                  get_current_span)
-from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import Counter, Gauge
 
 
 def init_tracing(service_name: str, trace_endpoint: str) -> None:
-    """
-    Initialize OpenTelemetry TracerProvider with OTLP exporter.
-    """
     if not trace_endpoint:
         logging.warning("No trace endpoint configured. Tracing disabled.")
         return
-
     try:
         resource = Resource.create({"service.name": service_name})
         provider = TracerProvider(resource=resource)
@@ -35,10 +31,7 @@ def init_tracing(service_name: str, trace_endpoint: str) -> None:
         trace.set_tracer_provider(NoOpTracerProvider())
 
 
-def get_tracer(service_name: str = "iot-subscriber") -> Tracer:
-    """
-    Return tracer. If tracing is not initialized, returns a no-op tracer.
-    """
+def get_tracer(service_name: str = "redis-to-postgres") -> Tracer:
     try:
         return trace.get_tracer(service_name)
     except Exception:
@@ -47,55 +40,31 @@ def get_tracer(service_name: str = "iot-subscriber") -> Tracer:
 
 
 def get_span_context(tracer: Optional[Tracer], name: str) -> ContextManager[Span]:
-    """
-    Returns a context manager for a named tracing span.
-    """
     if tracer:
         return tracer.start_as_current_span(name)
     return nullcontext(get_current_span())
 
 
 class Metrics:
-    mqtt_received_total = Counter(
-        name="mqtt_received_total",
-        documentation="Number of MQTT messages received",
-        labelnames=["topic"],
+    redis_read_total = Counter(
+        name="redis_read_total",
+        documentation="Number of Redis stream batches read",
     )
-
-    redis_stream_push_total = Counter(
-        name="redis_stream_push_total",
-        documentation="Number of successful Redis stream batch pushes",
+    db_insert_total = Counter(
+        name="db_insert_total",
+        documentation="Number of successful DB insert batches",
     )
-
-    redis_stream_push_failure_total = Counter(
-        name="redis_stream_push_failure_total",
-        documentation="Number of failed Redis stream batch pushes",
+    db_insert_failure_total = Counter(
+        name="db_insert_failure_total",
+        documentation="Number of failed DB insert batches",
     )
-
-    current_queue_size = Gauge(
-        name="current_queue_size",
-        documentation="Current queue size waiting for Redis stream push",
+    stream_pending_size = Gauge(
+        name="stream_pending_size",
+        documentation="Current size of pending Redis stream entries",
     )
-
-    batch_size = Gauge(
-        name="batch_size",
-        documentation="Current batch size for Redis stream writes",
-    )
-
-    dropped_messages_total = Counter(
-        name="dropped_messages_total",
-        documentation="Total number of messages dropped due to full queue",
-    )
-
-    redis_stream_records_pushed_total = Counter(
-        name="redis_stream_records_pushed_total",
-        documentation="Total number of records pushed to Redis stream",
-    )
-
-    queue_wait_time = Histogram(
-        "queue_wait_time_seconds",
-        "Time spent waiting in the queue before processing",
-        buckets=[0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10],
+    db_connection_pool_size = Gauge(
+        name="db_connection_pool_size",
+        documentation="Current size of the DB connection pool",
     )
 
 
@@ -103,14 +72,12 @@ class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         span = get_current_span()
         ctx: Optional[SpanContext] = span.get_span_context()
-
         trace_id = (
             format(ctx.trace_id, "032x") if ctx and ctx.is_valid else "unknown-trace"
         )
         span_id = (
             format(ctx.span_id, "016x") if ctx and ctx.is_valid else "unknown-span"
         )
-
         log_data = {
             "timestamp": self.formatTime(record),
             "level": record.levelname,
@@ -125,10 +92,8 @@ class JSONFormatter(logging.Formatter):
             "process": record.process,
             "thread": record.threadName,
         }
-
         if record.exc_info:
             log_data["traceback"] = traceback.format_exc().strip().replace("\n", " | ")
         elif hasattr(record, "message") and "RuntimeWarning" in record.message:
             log_data["traceback"] = record.getMessage()
-
         return json.dumps(log_data, ensure_ascii=False)

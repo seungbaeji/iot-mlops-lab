@@ -17,21 +17,22 @@ class MQTTConfig(BaseSettings):
     model_config = {"env_prefix": "MQTT_", "env_file": ".env"}
 
 
-class DatabaseConfig(BaseSettings):
-    name: str
-    user: str
-    password: str
+class RedisConfig(BaseSettings):
     host: str
     port: int
-
-    model_config = {"env_prefix": "DB_", "env_file": ".env"}
+    stream_name: str
+    maxlen: int = 100000
+    model_config = {"env_prefix": "REDIS_", "env_file": ".env"}
 
 
 class SubscriberConfig(BaseSettings):
-    batch_size: int = 20
+    batch_size: int = 100
+    min_batch_size: int = 50
+    max_batch_size: int = 10000
     flush_interval: int = 5
     mqtt_reconn_delay_sec: int = 5
     error_retry_delay_sec: int = 5
+    queue_maxsize: int = 10000
 
     model_config = {"env_prefix": "SUB_", "env_file": ".env"}
 
@@ -46,7 +47,7 @@ class ObservabilityConfig(BaseSettings):
 
 class AppConfig(BaseSettings):
     mqtt: MQTTConfig
-    database: DatabaseConfig
+    redis: RedisConfig
     subscriber: SubscriberConfig
     observability: Optional[ObservabilityConfig] = None
 
@@ -62,7 +63,7 @@ class AppConfig(BaseSettings):
 
         return AppConfig(
             mqtt=MQTTConfig(**raw["mqtt"]),
-            database=DatabaseConfig(**raw["database"]),
+            redis=RedisConfig(**raw["redis"]),
             subscriber=SubscriberConfig(**raw["subscriber"]),
             observability=(
                 ObservabilityConfig(**raw["observability"])

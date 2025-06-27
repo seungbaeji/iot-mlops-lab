@@ -4,16 +4,11 @@ port = 1883
 topic = "sensors/#"
 qos = 0
 
-[database]
-name = "iot_ml_lab"
-user = "lab_admin"
-password = "changeme"
-host = "localhost"
-port = 5432
-
 [subscriber]
-batch_size = 500
-flush_interval = 5
+batch_size = 1000
+min_batch_size = 500
+max_batch_size = 10000
+flush_interval = 3
 mqtt_reconn_delay_sec = 5
 error_retry_delay_sec = 5
 
@@ -21,3 +16,9 @@ error_retry_delay_sec = 5
 trace_endpoint = "http://localhost:4318/v1/traces"
 service_name = "iot-subscriber"
 prometheus_port = 8001
+
+[redis]
+host = "localhost"
+port = 6379
+stream_name = "sensor_data_stream"
+maxlen = 100000  # 원하는 메시지 최대 개수

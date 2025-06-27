@@ -6,6 +6,9 @@ distributor:
     otlp:
       protocols:
         grpc:
+          endpoint: "tempo:4317"
+        http:
+          endpoint: "tempo:4318"
 
 ingester:
   trace_idle_period: 10s
@@ -14,6 +17,22 @@ ingester:
 compactor:
   compaction:
     compaction_window: 1h
+
+query_frontend:
+  search:
+    duration_s: 168h # Explore 및 Service Graph에 trace 검색을 위해 7일 설정
+  trace_by_id:
+    enabled: true
+
+metrics_generator:
+  storage:
+    path: /tmp/tempo/generator/wal
+  processor:
+    service_graphs:
+      enabled: true
+      # (선택)—span metrics 등을 활성화하려면 아래와 같이 구성
+    span_metrics:
+      enabled: true
 
 storage:
   trace:

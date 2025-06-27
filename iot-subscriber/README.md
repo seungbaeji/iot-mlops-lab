@@ -137,25 +137,6 @@ poetry run pytest
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please open issues or pull requests for bug fixes, features, or improvements.
-
----
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
-## Authors
-
-- [Your Name or Team]  
-- [Project Repository Link]
-
----
-
 ## Acknowledgements
 
 - [asyncpg](https://github.com/MagicStack/asyncpg)

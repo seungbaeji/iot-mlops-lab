@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pytest
-
 from iot_subscriber.config import AppConfig
 
 
