@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "common"
+version = "0.1.0"
+description = ""
+authors = ["Seungbae Ji <seungbae.ji@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "common", from = "src" }]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.12,<4.0.0"
+prometheus-client = ">=0.22.1,<0.23.0"
+opentelemetry-api = ">=1.34.1,<2.0.0"
+opentelemetry-sdk = ">=1.34.1,<2.0.0"
+opentelemetry-exporter-otlp = ">=1.34.1,<2.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pytest-mock = "^3.14.1"
+
+[[tool.poetry.source]]
+name = "github"
+url = "https://pypi.pkg.github.com/seungbaeji/common"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+known_first_party = ["common", "tests"]
+src_paths = ["src"]
+line_length = 88  # black과 동일한 기본값
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.pytest.ini_options]
+addopts = "-ra -v"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "src",
+]
