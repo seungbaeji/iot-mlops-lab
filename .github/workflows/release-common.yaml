@@ -88,4 +88,4 @@ jobs:
           POETRY_HTTP_BASIC_GITHUB__PASSWORD: ${{ secrets.GH_WORKFLOW_TOKEN }}
         run: |
           poetry config repositories.github https://pypi.pkg.github.com/${{ github.repository_owner }}
-          poetry publish -r github --no-interaction --username ${{ github.actor }} --password ${{ secrets.GH_WORKFLOW_TOKEN }} -C dist
+          poetry publish -r github --no-interaction --username ${{ github.actor }} --password ${{ secrets.GH_WORKFLOW_TOKEN }}
