@@ -19,8 +19,11 @@ pytest = "^8.4.1"
 pytest-mock = "^3.14.1"
 
 [[tool.poetry.source]]
-name = "github"
-url = "https://pypi.pkg.github.com/seungbaeji/common"
+name = "devpi"
+url = "http://devpi.gitops.mrml.xyz/seungbae/dev"
+
+[[tool.poetry.source]]
+name = "pypi"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

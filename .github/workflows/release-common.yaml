@@ -1,15 +1,14 @@
 name: Release common Python package to GitHub Packages
 
 permissions:
-  contents: read
-  packages: write
+  contents: write
 
 on:
   push:
     branches:
       - main
     tags:
-      - "v*"
+      - "common-v*"
     paths:
       - "common/**"
       - ".github/workflows/release-common.yaml"
@@ -26,7 +25,7 @@ jobs:
       run:
         working-directory: common
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Extract Python version from pyproject.toml
         id: extract-python
@@ -57,35 +56,35 @@ jobs:
         run: poetry build
 
       - name: Upload dist as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: dist/
+          path: common/dist/
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/common-v')
     needs: build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: common
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download dist artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: dist
-          path: dist
+          path: common/dist/
 
       - name: Install Poetry from .poetry-version
         run: |
           pip install "poetry==$(cat .poetry-version)"
 
-      - name: Publish to GitHub Packages
+      - name: Publish to self-hosted devpi
         env:
-          POETRY_HTTP_BASIC_GITHUB__USERNAME: ${{ github.actor }}
-          POETRY_HTTP_BASIC_GITHUB__PASSWORD: ${{ secrets.GH_WORKFLOW_TOKEN }}
+          DEVPI_USER: seungbae
+          DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
         run: |
-          poetry config repositories.github https://pypi.pkg.github.com/${{ github.repository_owner }}
-          poetry publish -r github --no-interaction --username ${{ github.actor }} --password ${{ secrets.GH_WORKFLOW_TOKEN }} -C dist
+          poetry config repositories.devpi https://devpi.gitops.mrml.xyz/seungbae/dev
+          poetry publish -r devpi --username $DEVPI_USER --password $DEVPI_PASSWORD
