@@ -83,7 +83,7 @@ jobs:
 
       - name: Publish to self-hosted devpi
         env:
-          DEVPI_USER: devpi
+          DEVPI_USER: seungbae
           DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
         run: |
           poetry config repositories.devpi https://devpi.gitops.mrml.xyz/seungbae/dev
