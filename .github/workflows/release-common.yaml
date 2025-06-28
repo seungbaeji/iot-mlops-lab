@@ -86,5 +86,5 @@ jobs:
           DEVPI_USER: devpi
           DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
         run: |
-          poetry config repositories.devpi https://devpi.gitops.mrml.xyz/seungbae/dev/
+          poetry config repositories.devpi https://devpi.gitops.mrml.xyz/seungbae/dev
           poetry publish -r devpi --username $DEVPI_USER --password $DEVPI_PASSWORD
