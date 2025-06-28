@@ -20,7 +20,7 @@ pytest-mock = "^3.14.1"
 
 [[tool.poetry.source]]
 name = "github"
-url = "https://pypi.pkg.github.com/seungbaeji/common"
+url = "https://pypi.pkg.github.com/seungbaeji"
 
 [[tool.poetry.source]]
 name = "pypi"
