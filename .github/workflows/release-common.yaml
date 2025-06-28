@@ -1,8 +1,7 @@
 name: Release common Python package to GitHub Packages
 
 permissions:
-  contents: read
-  packages: write
+  contents: write
 
 on:
   push:
@@ -78,14 +77,9 @@ jobs:
           name: dist
           path: common/dist/
 
-      - name: Install Poetry from .poetry-version
-        run: |
-          pip install "poetry==$(cat .poetry-version)"
-
-      - name: Publish to GitHub Packages
-        env:
-          POETRY_HTTP_BASIC_GITHUB__USERNAME: ${{ github.actor }}
-          POETRY_HTTP_BASIC_GITHUB__PASSWORD: ${{ secrets.GH_WORKFLOW_TOKEN }}
-        run: |
-          poetry config repositories.github https://pypi.pkg.github.com/${{ github.repository_owner }}
-          poetry publish -r github --no-interaction --username ${{ github.actor }} --password ${{ secrets.GH_WORKFLOW_TOKEN }}
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            common/dist/*.whl
+            common/dist/*.tar.gz
