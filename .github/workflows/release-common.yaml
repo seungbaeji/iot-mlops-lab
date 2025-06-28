@@ -77,9 +77,14 @@ jobs:
           name: dist
           path: common/dist/
 
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            common/dist/*.whl
-            common/dist/*.tar.gz
+      - name: Install Poetry from .poetry-version
+        run: |
+          pip install "poetry==$(cat .poetry-version)"
+
+      - name: Publish to self-hosted devpi
+        env:
+          DEVPI_USER: devpi
+          DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
+        run: |
+          poetry config repositories.devpi https://devpi.gitops.mrml.xyz/seungbae/dev/
+          poetry publish -r devpi --username $DEVPI_USER --password $DEVPI_PASSWORD
