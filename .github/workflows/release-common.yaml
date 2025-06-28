@@ -63,7 +63,7 @@ jobs:
           path: common/dist/
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/common-v')
     needs: build
     runs-on: ubuntu-latest
     defaults:
