@@ -1,0 +1,71 @@
+[project]
+authors = [{ name = "Seungbae Ji", email = "seungbae.ji@gmail.com" }]
+dependencies = [
+  "fastapi>=0.115.14",
+  "opentelemetry-instrumentation-fastapi>=0.55b1",
+  "paho-mqtt>=2.1.0",
+  "pydantic-settings>=2.10.1",
+  "uvicorn[standard]>=0.35.0",
+  "mrml-common (>=0.1.0,<0.2.0)",
+]
+description = ""
+name = "iot-simulator"
+readme = "README.md"
+requires-python = ">=3.12"
+version = "0.1.0"
+
+[project.scripts]
+iot-simulator = "iot_simulator.main:main"
+
+[tool.poetry]
+packages = [{ include = "iot_simulator", from = "src" }]
+
+[[tool.poetry.source]]
+name     = "devpi"
+priority = "explicit"
+url      = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
+
+[tool.poetry.dependencies]
+mrml-common = { source = "devpi" }
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28.1",
+  "mypy>=1.16.1",
+  "pytest>=8.4.1",
+  "pytest-asyncio>=1.0.0",
+]
+
+[tool.uv.sources]
+mrml-common = { index = "devpi" }
+
+[[tool.uv.index]]
+explicit    = true
+name        = "devpi"
+publish-url = "https://devpi.gitops.mrml.xyz/seungbae/dev"
+url         = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
+
+[tool.pytest.ini_options]
+addopts    = "-ra -v"
+pythonpath = ["src"]
+testpaths  = ["tests"]
+
+[tool.mypy]
+check_untyped_defs     = true
+ignore_missing_imports = true
+mypy_path              = "src"
+python_version         = "3.12"
+strict                 = false
+
+[[tool.mypy.overrides]]
+module = "src.iot_simulator.*"
+strict = true
+
+[[tool.mypy.overrides]]
+disallow_untyped_defs = false
+ignore_errors         = true
+module                = "tests.*"

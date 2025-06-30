@@ -1,0 +1,42 @@
+disable_existing_loggers = true
+version                  = 1
+
+# =========================
+# Formatters
+# =========================
+
+[formatters.json]
+class = "redis_to_postgres.JSONFormatter"
+# timestamp 포맷은 Formatter 클래스 내부에서 정의됨
+
+# =========================
+# Handlers
+# =========================
+
+[handlers.console]
+class     = "logging.StreamHandler"
+formatter = "json"
+level     = "DEBUG"
+stream    = "ext://sys.stdout"
+
+[handlers.file]
+backupCount = 5
+class       = "logging.handlers.RotatingFileHandler"
+encoding    = "utf-8"
+filename    = "./tmp/redis-to-postgres.log"
+formatter   = "json"
+level       = "INFO"
+maxBytes    = 10485760                               # 10MB
+
+# =========================
+# Loggers
+# =========================
+
+[loggers.redis_to_postgres]
+handlers  = ["console", "file"]
+level     = "DEBUG"
+propagate = false
+
+[root]
+handlers = ["console"]
+level    = "INFO"

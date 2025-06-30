@@ -1,0 +1,77 @@
+[project]
+name = "iot-subscriber"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Seungbae Ji",email = "seungbae.ji@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "aiomqtt>=2.4.0",
+    "asyncio-mqtt>=0.16.2",
+    "asyncpg>=0.30.0",
+    "mrml-common>=0.1.0",
+    "pydantic-settings>=2.10.1",
+    "redis>=6.2.0",
+]
+
+[project.scripts]
+iot-subscriber = "iot_subscriber.main:main"
+
+[tool.poetry]
+packages = [{include = "iot_subscriber", from = "src"}]
+
+[[tool.poetry.source]]
+name     = "devpi"
+priority = "explicit"
+url      = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
+
+[tool.poetry.dependencies]
+mrml-common = { source = "devpi" }
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=1.16.1",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+]
+
+[tool.uv.sources]
+mrml-common = { index = "devpi" }
+
+[[tool.uv.index]]
+explicit    = true
+name        = "devpi"
+publish-url = "https://devpi.gitops.mrml.xyz/seungbae/dev"
+url         = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
+
+[tool.pytest.ini_options]
+addopts = "-ra -v"
+pythonpath = [
+    "src",
+]
+testpaths = [
+    "tests",
+]
+
+[tool.mypy]
+check_untyped_defs     = true
+ignore_missing_imports = true
+mypy_path              = "src"
+python_version         = "3.12"
+strict                 = false
+
+[[tool.mypy.overrides]]
+module = "src.iot_simulator.*"
+strict = true
+
+[[tool.mypy.overrides]]
+disallow_untyped_defs = false
+ignore_errors         = true
+module                = "tests.*"

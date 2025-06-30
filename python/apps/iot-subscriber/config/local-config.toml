@@ -1,0 +1,24 @@
+[mqtt]
+host  = "localhost"
+port  = 1883
+qos   = 0
+topic = "sensors/#"
+
+[subscriber]
+batch_size            = 1000
+error_retry_delay_sec = 5
+flush_interval        = 3
+max_batch_size        = 10000
+min_batch_size        = 500
+mqtt_reconn_delay_sec = 5
+
+[observability]
+prometheus_port = 8001
+service_name    = "iot-subscriber"
+trace_endpoint  = "http://localhost:4318/v1/traces"
+
+[redis]
+host        = "localhost"
+maxlen      = 100000               # 원하는 메시지 최대 개수
+port        = 6379
+stream_name = "sensor_data_stream"

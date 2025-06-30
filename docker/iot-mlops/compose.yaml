@@ -1,0 +1,146 @@
+services:
+
+  postgresql:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: iot_ml_lab
+      POSTGRES_USER: lab_admin
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./config/postgres.conf:/etc/postgresql/postgresql.conf
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+  mqtt:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - '6379:6379'
+    restart: always
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - '8081:8081'
+    depends_on:
+      - redis
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: ['-config.file=/etc/tempo.yaml']
+    ports:
+      - '3200:3200' # Tempo UI/API
+    expose:
+      - '4317'
+    volumes:
+      - ./observability_config/tempo.yaml:/etc/tempo.yaml
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.93.0
+    container_name: otel_collector
+    command: ['--config=/etc/otel-collector-config.yaml']
+    ports:
+      - '4318:4318' # OTLP HTTP
+      - '4317:4317' # OTLP gRPC
+    volumes:
+      - ./observability_config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability_config/prometheus.yaml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_LOG_LEVEL=warn
+    depends_on:
+      - tempo
+    volumes:
+      - ./observability_config/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+
+  iot-simulator:
+    build:
+      context: ../../python2/apps/iot-simulator
+      dockerfile: Dockerfile
+    container_name: iot-simulator
+    ports:
+      - '8000:8000'
+      - '8001'
+    depends_on:
+      - mqtt
+      - otel-collector
+    volumes:
+      - ./app_config/iot-simulator/config.toml:/app/config/config.toml
+      - ./app_config/iot-simulator/logger.toml:/app/config/logger.toml
+    command: >
+      iot-simulator
+      --config /app/config/config.toml
+      --log-config /app/config/logger.toml
+
+  iot-subscriber:
+    build:
+      context: ../../python2/apps/iot-subscriber
+      dockerfile: Dockerfile
+    container_name: iot-subscriber
+    ports:
+      - "8001"
+    depends_on:
+      - mqtt
+      - redis
+      - otel-collector
+    volumes:
+      - ./app_config/iot-subscriber/config.toml:/app/config/config.toml
+      - ./app_config/iot-subscriber/logger.toml:/app/config/logger.toml
+    command: >
+      iot-subscriber
+      --config /app/config/config.toml
+      --log-config /app/config/logger.toml
+
+  redis-to-postgres:
+    build:
+      context: ../../python2/apps/redis-to-postgres
+      dockerfile: Dockerfile
+    container_name: redis-to-postgres
+    ports:
+      - '8011'
+      - '8012'
+      - '8013'
+    depends_on:
+      - redis
+      - postgresql
+      - otel-collector
+    volumes:
+      - ./app_config/redis-to-postgres/config.toml:/app/config/config.toml
+      - ./app_config/redis-to-postgres/logger.toml:/app/config/logger.toml
+    command: >
+      redis-to-postgres
+      --config /app/config/config.toml
+      --log-config /app/config/logger.toml
+      --workers worker-1 worker-2
