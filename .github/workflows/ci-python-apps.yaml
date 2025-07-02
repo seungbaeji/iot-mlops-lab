@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "python/apps/**"
+      - ".github/workflows/ci-python-apps.yaml"
+  workflow_dispatch:
 
 jobs:
   set-matrix:

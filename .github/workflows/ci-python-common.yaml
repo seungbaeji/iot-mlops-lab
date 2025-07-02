@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "python/common/**"
+      - ".github/workflows/ci-python-common.yaml"
+  workflow_dispatch:
 
 jobs:
   build:
