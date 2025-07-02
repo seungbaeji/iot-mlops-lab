@@ -36,11 +36,14 @@ jobs:
       - name: Extract Python version from .python-version
         id: extract-python
         run: |
-          PYTHON_VERSION=$(head -n 1 .python-version)
+          if [ -z "$PYTHON_VERSION" ]; then
+            echo "::error title=.python-version missing::Cannot determine Python version"
+            exit 1
+          fi
           echo "version=$PYTHON_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ steps.extract-python.outputs.version }}
 
