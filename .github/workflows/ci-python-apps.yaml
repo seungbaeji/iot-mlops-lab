@@ -1,0 +1,104 @@
+name: CI for Python apps (PR-based)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "python/apps/**"
+
+jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: set
+        run: |
+          git fetch origin main
+          changed=$(git diff --name-only origin/main...HEAD | grep '^python/apps/' | cut -d/ -f3 | sort -u)
+          if [ -z "$changed" ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+          else
+            apps=$(printf '%s' "$changed" | jq -R . | jq -s .)
+            echo "matrix=$apps" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: set-matrix
+    if: needs.set-matrix.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: python/apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv --python $(which python)
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Build package
+        run: uv build --wheel
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.app }}
+          path: python/apps/${{ matrix.app }}/dist/
+
+  test:
+    needs: build
+    if: needs.set-matrix.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: python/apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ matrix.app }}
+          path: python/apps/${{ matrix.app }}/dist/
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv --python $(which python)
+
+      - name: Install built wheel package
+        run: uv pip install dist/*.whl
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run --active pytest

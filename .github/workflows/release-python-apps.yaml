@@ -1,0 +1,58 @@
+name: Release Python Apps
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "iot-simulator-v*"
+      - "iot-subscriber-v*"
+      - "redis-to-postgres-v*"
+
+jobs:
+  set-app:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.set.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: set
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          APP_NAME=$(echo "$TAG_NAME" | sed -E 's/-v[0-9.]+$//')
+          echo "app=$APP_NAME" >> "$GITHUB_OUTPUT"
+
+  build-and-publish:
+    needs: set-app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/apps/${{ needs.set-app.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv --python $(which python)
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Build package
+        run: uv build --wheel
+
+      - name: Publish to self-hosted devpi
+        env:
+          DEVPI_USER: seungbae
+          DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
+        run: |
+          uv publish --repository-url https://devpi.gitops.mrml.xyz/seungbae/dev \
+                     -u $DEVPI_USER -p $DEVPI_PASSWORD dist/
