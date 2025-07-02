@@ -64,7 +64,7 @@ jobs:
           path: python/apps/${{ matrix.app }}/dist/
 
   test:
-    needs: build
+    needs: [set-matrix, build]
     if: needs.set-matrix.outputs.matrix != '[]'
     runs-on: ubuntu-latest
     strategy:
