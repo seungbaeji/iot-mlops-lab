@@ -36,7 +36,7 @@ jobs:
       - name: Extract Python version from .python-version
         id: extract-python
         run: |
-          PYTHON_VERSION=$(head -n 1 "$GITHUB_WORKSPACE/.python-version")
+          PYTHON_VERSION=$(head -n 1 .python-version)
           if [ -z "$PYTHON_VERSION" ]; then
             echo "::error title=.python-version missing::Cannot determine Python version"
             exit 1
