@@ -23,14 +23,14 @@ jobs:
         run: |
           git fetch origin main
           changed="$(git diff --name-only origin/main...HEAD | grep '^python/apps/' | cut -d/ -f3 | sort -u)"
+
           if [ -z "$changed" ]; then
             echo "matrix=[]" >> "$GITHUB_OUTPUT"
             echo "No apps changed"
           else
-            apps="$(printf '%s' "$changed" | jq -R . | jq -s .)"
+            apps="$(printf '%s\n' "$changed" | jq -R . | jq -s -c .)"
             echo "matrix=$apps" >> "$GITHUB_OUTPUT"
-            echo "Detected changed apps:"
-            echo "$apps"
+            echo "Detected changed apps: $apps"
           fi
 
   build:

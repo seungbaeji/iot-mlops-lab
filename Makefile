@@ -1,30 +1,34 @@
 .PHONY: init-python precommit run-iot-mlops python-lock
 
+# Setup Python toolchain globally using pipx
 init-python:
-	brew install pipx
-	pipx ensurepath
-	/bin/zsh -c "source ~/.zshrc"
+	@echo "🔧 Installing Python tools with pipx..."
+	@pipx --version >/dev/null 2>&1 || (echo "Installing pipx..." && brew install pipx && pipx ensurepath)
+	@pipx list | grep 'uv' >/dev/null 2>&1 || pipx install uv
+	@pipx list | grep 'poetry' >/dev/null 2>&1 || pipx install poetry
+	@pipx list | grep 'ruff' >/dev/null 2>&1 || pipx install ruff
+	@pipx list | grep 'pre-commit' >/dev/null 2>&1 || pipx install pre-commit
 
-	# install the tools
-	pipx install uv
-	pipx install poetry
-	pipx install ruff
-	pipx install pre-commit
-
+# Run format & pre-commit hooks
 precommit:
-	@taplo format > /dev/null 2>&1 || true
+	@echo "🎨 Formatting TOML files with taplo (if installed)..."
+	@command -v taplo >/dev/null 2>&1 && taplo format || echo "⚠️  taplo not installed, skipping formatting"
+	@echo "🔍 Running pre-commit hooks..."
 	@pre-commit run --all-files
 
+# Run the full IoT MLOps stack
 run-iot-mlops:
-	docker compose -f docker/iot-mlops/compose.yaml up --build;
+	@echo "🚀 Running IoT MLOps Docker Compose..."
+	docker compose -f docker/iot-mlops/compose.yaml up --build
 
+# Lock all Python dependencies (uv + poetry)
 python-lock:
-	@echo "Locking uv & poetry dependencies for all Python apps..."
+	@echo "🔒 Locking dependencies for all Python packages..."
 	@for dir in python/apps/* python/common ; do \
 		if [ -f "$$dir/pyproject.toml" ]; then \
-			echo "🔒 Locking in $$dir..."; \
-			(cd $$dir && uv lock && poetry lock); \
+			echo "📦 Locking in $$dir..."; \
+			(cd $$dir && uv lock && poetry lock) || true; \
 		else \
-			echo "⏭️ Skipping $$dir (no pyproject.toml)"; \
+			echo "⏭️  Skipping $$dir (no pyproject.toml)"; \
 		fi \
 	done
