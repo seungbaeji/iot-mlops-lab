@@ -8,7 +8,7 @@ import asyncpg
 import redis.asyncio as aioredis
 from opentelemetry.trace import Tracer
 
-from redis_to_postgres.config import PostgresConfig, RedisConfig, WorkerConfig
+from redis_to_postgres.config import PostgresConfig, RedisConfig
 from redis_to_postgres.observability import Metrics, get_span_context
 
 logger = logging.getLogger(__name__)

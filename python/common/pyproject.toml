@@ -1,12 +1,10 @@
 [project]
-authors = [
-    { name = "Seungbae Ji", email = "seungbae.ji@gmail.com" },
-]
+authors = [{ name = "Seungbae Ji", email = "seungbae.ji@gmail.com" }]
 dependencies = [
-    "opentelemetry-api>=1.34.1",
-    "opentelemetry-exporter-otlp>=1.34.1",
-    "opentelemetry-sdk>=1.34.1",
-    "prometheus-client>=0.22.1",
+  "opentelemetry-api>=1.34.1",
+  "opentelemetry-exporter-otlp>=1.34.1",
+  "opentelemetry-sdk>=1.34.1",
+  "prometheus-client>=0.22.1",
 ]
 description = ""
 name = "mrml-common"
@@ -16,21 +14,13 @@ version = "0.1.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
-requires = [
-    "poetry-core>=2.0.0,<3.0.0",
-]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
 
 [dependency-groups]
-dev = [
-    "mypy>=1.16.1",
-    "pytest>=8.4.1",
-    "pytest-mock>=3.14.1",
-]
+dev = ["mypy>=1.16.1", "pytest>=8.4.1", "pytest-mock>=3.14.1"]
 
 [tool.poetry]
-packages = [
-    { include = "common", from = "src" },
-]
+packages = [{ include = "common", from = "src" }]
 
 [[tool.uv.index]]
 explicit    = true
@@ -39,13 +29,9 @@ publish-url = "https://devpi.gitops.mrml.xyz/seungbae/dev"
 url         = "https://devpi.gitops.mrml.xyz/seungbae/dev"
 
 [tool.pytest.ini_options]
-addopts = "-ra -v"
-pythonpath = [
-    "src",
-]
-testpaths = [
-    "tests",
-]
+addopts    = "-ra -v"
+pythonpath = ["src"]
+testpaths  = ["tests"]
 
 [tool.mypy]
 check_untyped_defs     = true

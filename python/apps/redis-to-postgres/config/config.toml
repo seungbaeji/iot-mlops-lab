@@ -1,10 +1,10 @@
 [redis]
 consumer = "redis-to-postgres"
-group = "sensor_group"
-host = "redis"
-port = 6379
-stream = "sensor_data_stream"
-ttl = 3600
+group    = "sensor_group"
+host     = "redis"
+port     = 6379
+stream   = "sensor_data_stream"
+ttl      = 3600
 
 [postgres]
 database = "iot_ml_lab"
@@ -23,6 +23,6 @@ service_name = "redis-to-postgres"
 trace_endpoint = "http://otel-collector:4318/v1/traces"
 
 [worker]
-batch_size = 3000
-block_ms = 1000
+batch_size      = 3000
+block_ms        = 1000
 retry_delay_sec = 2

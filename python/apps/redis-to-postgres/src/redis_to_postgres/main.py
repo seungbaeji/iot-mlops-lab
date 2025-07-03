@@ -60,7 +60,7 @@ def main() -> None:
             if config.observability
             else "redis-to-postgres"
         )
-        logger.info(f"Starting worker")
+        logger.info("Starting worker")
 
         async def run_worker() -> None:
             pg_manager: PostgresManager | None = None
