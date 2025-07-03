@@ -32,7 +32,6 @@ class RedisStreamToPostgresWorker:
             try:
                 conn = await self.pg.acquire()
                 entries = await self.redis.xreadgroup(
-                    consumer=self.worker_conf.name,
                     count=self.worker_conf.batch_size,
                     block=self.worker_conf.block_ms,
                 )
@@ -51,13 +50,9 @@ class RedisStreamToPostgresWorker:
                         for msg_id, msg_data in messages:
                             batch.append(json.loads(msg_data["data"]))
                             msg_ids.append(msg_id)
-                        logger.debug(
-                            f"[{self.worker_conf.name}] Successfully decoded {len(batch)} messages"
-                        )
+                        logger.debug(f"Successfully decoded {len(batch)} messages")
                     except Exception as e:
-                        logger.error(
-                            f"[{self.worker_conf.name}] Error decoding batch: {e}"
-                        )
+                        logger.error(f"Error decoding batch: {e}")
                         continue
 
                     # 3. write messages to postgres and ack and del from redis
@@ -68,7 +63,7 @@ class RedisStreamToPostgresWorker:
                         )
                         Metrics.redis_read_total.inc(len(batch))
                         logger.debug(
-                            f"[{self.worker_conf.name}] Successfully wrote {len(batch)} messages to Postgres"
+                            f"Successfully wrote {len(batch)} messages to Postgres"
                         )
                     except Exception as e:
                         logger.error(f"Error writing to Postgres: {e}")

@@ -17,7 +17,6 @@ __all__ = [
     "JSONFormatter",
     "PostgresManager",
     "RedisManager",
-    "Database",
     "RedisStreamToPostgresWorker",
     "AppConfig",
 ]

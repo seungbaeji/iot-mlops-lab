@@ -8,7 +8,7 @@ from pathlib import Path
 
 from prometheus_client import start_http_server
 
-from redis_to_postgres.config import AppConfig, WorkerConfig
+from redis_to_postgres.config import AppConfig
 from redis_to_postgres.database import PostgresManager, RedisManager
 from redis_to_postgres.observability import get_tracer, init_tracing
 from redis_to_postgres.worker import RedisStreamToPostgresWorker
@@ -36,13 +36,6 @@ def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="config/config.toml")
     parser.add_argument("--log-config", type=str, default="config/logger.toml")
-    parser.add_argument(
-        "--workers",
-        type=str,
-        default=None,
-        nargs="+",
-        help="worker names to run concurrently. ex) --workers worker-1 worker-2",
-    )
     return parser.parse_args()
 
 
@@ -62,47 +55,22 @@ def main() -> None:
                 f"Prometheus HTTP server started on :{config.observability.prometheus_port}"
             )
 
-        # 여러 worker 동시 실행
-        async def run_all() -> None:
-            tracer = (
-                get_tracer(config.observability.service_name)
-                if config.observability
-                else None
-            )
+        tracer = get_tracer(config.observability.service_name)
+        logger.info(f"Starting worker")
 
-            pg_manager = await PostgresManager.create(config.postgres, tracer)
-
+        async def run_worker() -> None:
             try:
-                tasks: list[asyncio.Task[None]] = []
-                for worker_conf in WorkerConfig.filter(config.workers, args.workers):
-                    logger.info(f"Starting worker: {worker_conf.name}")
-                    redis_manager = await RedisManager.create(
-                        config.redis, worker_conf, tracer
-                    )
-                    worker = RedisStreamToPostgresWorker(
-                        pg_manager, redis_manager, worker_conf, tracer
-                    )
-
-                    if worker_conf.observability:
-                        init_tracing(
-                            worker_conf.observability.service_name,
-                            worker_conf.observability.trace_endpoint,
-                        )
-                        start_http_server(worker_conf.observability.prometheus_port)
-                        logger.info(
-                            f"Prometheus HTTP server started on :{worker_conf.observability.prometheus_port} for {worker_conf.name}"
-                        )
-                        worker.tracer = get_tracer(
-                            worker_conf.observability.service_name
-                        )
-                        logger.info(f"Tracing initialized for {worker_conf.name}")
-
-                    tasks.append(asyncio.create_task(worker.run()))
-                await asyncio.gather(*tasks)
+                pg_manager = await PostgresManager.create(config.postgres, tracer)
+                redis_manager = await RedisManager.create(config.redis, tracer)
+                worker = RedisStreamToPostgresWorker(
+                    pg_manager, redis_manager, config.worker, tracer
+                )
+                await worker.run()
             finally:
                 await pg_manager.close()
+                await redis_manager.close()
 
-        asyncio.run(run_all())
+        asyncio.run(run_worker())
     except (KeyboardInterrupt, asyncio.CancelledError):
         logger.info("Received interrupt signal. Shutting down gracefully...")
         sys.exit(0)

@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from redis_to_postgres.worker import RedisStreamToPostgresWorker
 from redis_to_postgres.config import WorkerConfig
@@ -10,11 +10,9 @@ from redis_to_postgres.database import PostgresManager, RedisManager
 @pytest.fixture
 def worker_config():
     return WorkerConfig(
-        name="worker-1",
         batch_size=2,
         block_ms=1000,
         retry_delay_sec=1,
-        observability=None,
     )
 
 

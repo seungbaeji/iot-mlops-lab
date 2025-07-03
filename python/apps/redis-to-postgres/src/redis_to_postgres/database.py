@@ -99,12 +99,10 @@ class RedisManager:
     def __init__(
         self,
         redis_conf: RedisConfig,
-        worker_conf: WorkerConfig,
         tracer: Tracer | None = None,
         redis_client: aioredis.Redis | None = None,
     ):
         self.redis_conf = redis_conf
-        self.worker_conf = worker_conf
         self.tracer = tracer
         self.redis: aioredis.Redis | None = redis_client
 
@@ -112,7 +110,6 @@ class RedisManager:
     async def create(
         cls,
         redis_conf: RedisConfig,
-        worker_conf: WorkerConfig,
         tracer: Tracer | None = None,
         redis_client: aioredis.Redis | None = None,
     ) -> "RedisManager":
@@ -135,15 +132,13 @@ class RedisManager:
                 logger.info("Redis stream group already exists.")
             else:
                 logger.error(f"Error creating Redis stream group: {e}")
-        return cls(redis_conf, worker_conf, tracer, redis_client)
+        return cls(redis_conf, tracer, redis_client)
 
-    async def xreadgroup(
-        self, consumer: str, count: int, block: int, **kwargs: Any
-    ) -> Any:
+    async def xreadgroup(self, count: int, block: int, **kwargs: Any) -> Any:
         assert self.redis is not None
         return await self.redis.xreadgroup(
             groupname=self.redis_conf.group,
-            consumername=consumer,
+            consumername=self.redis_conf.consumer,
             streams={self.redis_conf.stream: ">"},
             count=count,
             block=block,
