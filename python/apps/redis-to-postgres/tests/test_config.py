@@ -1,4 +1,3 @@
-import pytest
 import tomllib
 from redis_to_postgres.config import (
     AppConfig,

@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 from redis_to_postgres.worker import RedisStreamToPostgresWorker
