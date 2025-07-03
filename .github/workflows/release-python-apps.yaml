@@ -17,8 +17,8 @@ jobs:
 
       - id: set
         run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          APP_NAME=$(echo "$TAG_NAME" | sed -E 's/-v[0-9.]+$//')
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          APP_NAME="$(echo "$TAG_NAME" | sed -E 's/-v[0-9.]+$//')"
           echo "app=$APP_NAME" >> "$GITHUB_OUTPUT"
 
   build-and-publish:
@@ -33,7 +33,7 @@ jobs:
       - name: Ensure tag is on main branch
         run: |
           git fetch origin main
-          if ! git merge-base --is-ancestor origin/main $GITHUB_SHA; then
+          if ! git merge-base --is-ancestor origin/main "$GITHUB_SHA"; then
             echo "::error ::Tag must point to a commit that is on 'main' branch."
             exit 1
           fi
@@ -41,7 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: .python-version
+          python-version-file: python/apps/${{ needs.set-app.outputs.app }}/.python-version
 
       - name: Install uv
         run: pip install uv
@@ -61,4 +61,4 @@ jobs:
           DEVPI_PASSWORD: ${{ secrets.DEVPI_PASSWORD }}
         run: |
           uv publish --repository-url https://devpi.gitops.mrml.xyz/seungbae/dev \
-                     -u $DEVPI_USER -p $DEVPI_PASSWORD dist/
+                     -u "$DEVPI_USER" -p "$DEVPI_PASSWORD" dist/

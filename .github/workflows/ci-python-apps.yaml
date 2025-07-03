@@ -20,11 +20,12 @@ jobs:
       - id: set
         run: |
           git fetch origin main
-          changed=$(git diff --name-only origin/main...HEAD | grep '^python/apps/' | cut -d/ -f3 | sort -u)
+          changed="$(git diff --name-only origin/main...HEAD | grep '^python/apps/' | cut -d/ -f3 | sort -u)"
           if [ -z "$changed" ]; then
             echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            echo "No apps changed"
           else
-            apps=$(printf '%s' "$changed" | jq -R . | jq -s .)
+            apps="$(printf '%s' "$changed" | jq -R . | jq -s .)"
             echo "matrix=$apps" >> "$GITHUB_OUTPUT"
             echo "Detected changed apps:"
             echo "$apps"
@@ -52,7 +53,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: .python-version
+          python-version-file: python/apps/${{ matrix.app }}/.python-version
 
       - name: Install uv
         run: pip install uv
@@ -94,7 +95,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: .python-version
+          python-version-file: python/apps/${{ matrix.app }}/.python-version
 
       - name: Download dist artifact
         uses: actions/download-artifact@v4
