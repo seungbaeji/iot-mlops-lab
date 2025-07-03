@@ -63,6 +63,8 @@ def main() -> None:
         logger.info(f"Starting worker")
 
         async def run_worker() -> None:
+            pg_manager: PostgresManager | None = None
+            redis_manager: RedisManager | None = None
             try:
                 pg_manager = await PostgresManager.create(config.postgres, tracer)
                 redis_manager = await RedisManager.create(config.redis, tracer)
@@ -71,8 +73,10 @@ def main() -> None:
                 )
                 await worker.run()
             finally:
-                await pg_manager.close()
-                await redis_manager.close()
+                if pg_manager:
+                    await pg_manager.close()
+                if redis_manager:
+                    await redis_manager.close()
 
         asyncio.run(run_worker())
     except (KeyboardInterrupt, asyncio.CancelledError):
