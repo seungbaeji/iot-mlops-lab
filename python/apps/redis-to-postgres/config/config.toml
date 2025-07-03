@@ -1,45 +1,28 @@
 [redis]
-consumers = ["worker-1", "worker-2"]
-group     = "sensor_group"
-host      = "redis"
-port      = 6379
-stream    = "sensor_data_stream"
-ttl       = 3600
+consumer = "redis-to-postgres"
+group = "sensor_group"
+host = "redis"
+port = 6379
+stream = "sensor_data_stream"
+ttl = 3600
 
 [postgres]
-database        = "iot_ml_lab"
-host            = "postgres"
-max_retries     = 3
-password        = "changeme"
-pool_max_size   = 5
-pool_min_size   = 1
-port            = 5432
+database = "iot_ml_lab"
+host = "postgres"
+max_retries = 3
+password = "changeme"
+pool_max_size = 5
+pool_min_size = 1
+port = 5432
 retry_delay_sec = 1
-user            = "lab_admin"
+user = "lab_admin"
 
 [observability]
 prometheus_port = 8011
-service_name    = "redis-to-postgres"
-trace_endpoint  = "http://otel-collector:4318/v1/traces"
+service_name = "redis-to-postgres"
+trace_endpoint = "http://otel-collector:4318/v1/traces"
 
-[worker.worker-1]
-batch_size      = 3000
-block_ms        = 1000
-name            = "worker-1"
+[worker]
+batch_size = 3000
+block_ms = 1000
 retry_delay_sec = 2
-
-[worker.worker-2]
-batch_size      = 3000
-block_ms        = 1000
-name            = "worker-2"
-retry_delay_sec = 2
-
-[worker.worker-1.observability]
-prometheus_port = 8012
-service_name    = "redis-to-postgres.worker-1"
-trace_endpoint  = "http://otel-collector:4318/v1/traces"
-
-[worker.worker-2.observability]
-prometheus_port = 8013
-service_name    = "redis-to-postgres.worker-2"
-trace_endpoint  = "http://otel-collector:4318/v1/traces"

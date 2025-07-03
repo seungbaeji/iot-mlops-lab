@@ -3,6 +3,8 @@ from iot_subscriber.config import (
     AppConfig,
     MQTTConfig,
     SubscriberConfig,
+    ObservabilityConfig,
+    RedisConfig,
 )
 
 
@@ -16,5 +18,15 @@ def sample_config():
             mqtt_reconn_delay_sec=1,
             error_retry_delay_sec=1,
         ),
-        observability=None,
+        observability=ObservabilityConfig(
+            prometheus_port=8001,
+            service_name="iot-subscriber",
+            trace_endpoint="http://localhost:4318/v1/traces",
+        ),
+        redis=RedisConfig(
+            host="localhost",
+            port=6379,
+            maxlen=100000,
+            stream_name="sensor_data_stream",
+        ),
     )
