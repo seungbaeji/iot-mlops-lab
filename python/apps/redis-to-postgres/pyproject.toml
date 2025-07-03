@@ -1,24 +1,22 @@
 [project]
-name = "redis-to-postgres"
-version = "0.1.0"
-description = ""
-authors = [
-    {name = "Seungbae Ji",email = "seungbae.ji@gmail.com"}
+authors = [{ name = "Seungbae Ji", email = "seungbae.ji@gmail.com" }]
+dependencies = [
+  "asyncpg>=0.30.0",
+  "mrml-common>=0.1.0",
+  "pydantic-settings>=2.10.1",
+  "redis>=6.2.0",
 ]
+description = ""
+name = "redis-to-postgres"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "asyncpg>=0.30.0",
-    "mrml-common>=0.1.0",
-    "pydantic-settings>=2.10.1",
-    "redis>=6.2.0",
-]
+version = "0.1.0"
 
 [project.scripts]
 redis-to-postgres = "redis_to_postgres.main:main"
 
 [tool.poetry]
-packages = [{include = "redis_to_postgres", from = "src"}]
+packages = [{ include = "redis_to_postgres", from = "src" }]
 
 [[tool.poetry.source]]
 name     = "devpi"
@@ -29,16 +27,16 @@ url      = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
 mrml-common = { source = "devpi" }
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
-    "mypy>=1.16.1",
-    "pytest>=8.4.1",
-    "pytest-asyncio>=1.0.0",
-    "pytest-mock>=3.14.1",
+  "httpx>=0.28.1",
+  "mypy>=1.16.1",
+  "pytest>=8.4.1",
+  "pytest-asyncio>=1.0.0",
+  "pytest-mock>=3.14.1",
 ]
 
 
@@ -52,13 +50,9 @@ publish-url = "https://devpi.gitops.mrml.xyz/seungbae/dev"
 url         = "https://devpi.gitops.mrml.xyz/seungbae/dev/+simple"
 
 [tool.pytest.ini_options]
-addopts = "-ra -v"
-pythonpath = [
-    "src",
-]
-testpaths = [
-    "tests",
-]
+addopts    = "-ra -v"
+pythonpath = ["src"]
+testpaths  = ["tests"]
 
 [tool.mypy]
 check_untyped_defs     = true

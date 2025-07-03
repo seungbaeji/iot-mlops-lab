@@ -1,0 +1,35 @@
+model:
+  provider: openai
+  name: gpt-4o
+  temperature: 0.2
+
+review:
+  summarize_pr: true
+  summarize_comments: true
+  code_suggestions: true
+  comment_mode: inline
+  comment_unmodified_lines: false
+
+include:
+  - "python/**"
+  - "docker/**"
+exclude:
+  - "**/tests/**"
+  - "**/migrations/**"
+  - "**/*.md"
+  - "**/*.yaml"
+  - "scripts/**"
+
+file:
+  max_file_size: 300
+
+github:
+  skip_if_draft: true
+
+ignore_draft_pr: true
+release_notes: false
+enable_beta_features: true
+disable_poem: true
+system_language: en-US
+ignored_titles: "WIP,DO NOT MERGE"
+ignored_branch: "main" # release branch
