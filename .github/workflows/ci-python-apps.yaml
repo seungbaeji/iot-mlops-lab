@@ -112,7 +112,9 @@ jobs:
         run: uv venv .venv --python "$(which python)"
 
       - name: Install built wheel package
-        run: uv pip install dist/*.whl
+        run: |
+          uv pip install --index-url https://devpi.gitops.mrml.xyz/seungbae/dev mrml-common
+          uv pip install dist/*.whl
 
       - name: Install dev dependencies
         run: uv sync --group dev
