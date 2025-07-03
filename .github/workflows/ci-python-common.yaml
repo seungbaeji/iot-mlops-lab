@@ -1,0 +1,87 @@
+name: CI for Common Package (PR-based)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "python/common/**"
+      - ".github/workflows/ci-python-common.yaml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/common
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check working directory and list files
+        run: |
+          echo "PWD: $(pwd)"
+          ls -al .
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: python/common/.python-version
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv --python "$(which python)"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Build package
+        run: uv build --wheel
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-common
+          path: python/common/dist/
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/common
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check working directory and list files
+        run: |
+          echo "PWD: $(pwd)"
+          ls -al .
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: python/common/.python-version
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-common
+          path: python/common/dist/
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Create virtual environment
+        run: uv venv .venv --python "$(which python)"
+
+      - name: Install built wheel package
+        run: uv pip install dist/*.whl
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Run tests
+        run: uv run --active pytest
