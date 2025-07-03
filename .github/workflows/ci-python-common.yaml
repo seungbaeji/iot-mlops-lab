@@ -18,6 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check working directory and list files
+        run: |
+          echo "PWD: $(pwd)"
+          ls -al .
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -27,7 +32,7 @@ jobs:
         run: pip install uv
 
       - name: Create virtual environment
-        run: uv venv .venv --python $(which python)
+        run: uv venv .venv --python "$(which python)"
 
       - name: Install dependencies
         run: uv sync
@@ -50,6 +55,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check working directory and list files
+        run: |
+          echo "PWD: $(pwd)"
+          ls -al .
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -65,7 +75,7 @@ jobs:
         run: pip install uv
 
       - name: Create virtual environment
-        run: uv venv .venv --python $(which python)
+        run: uv venv .venv --python "$(which python)"
 
       - name: Install built wheel package
         run: uv pip install dist/*.whl
