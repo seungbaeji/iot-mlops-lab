@@ -55,7 +55,11 @@ def main() -> None:
                 f"Prometheus HTTP server started on :{config.observability.prometheus_port}"
             )
 
-        tracer = get_tracer(config.observability.service_name)
+        tracer = get_tracer(
+            config.observability.service_name
+            if config.observability
+            else "redis-to-postgres"
+        )
         logger.info(f"Starting worker")
 
         async def run_worker() -> None:

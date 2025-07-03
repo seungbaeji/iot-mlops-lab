@@ -1,8 +1,14 @@
 import pytest
 import tomllib
-from redis_to_postgres.config import AppConfig, ObservabilityConfig
+from redis_to_postgres.config import (
+    AppConfig,
+    ObservabilityConfig,
+    RedisConfig,
+    PostgresConfig,
+    WorkerConfig,
+)
 
-CONFIG_TEXT = b'''
+CONFIG_TEXT = b"""
 [redis]
 consumer  = "default"
 group     = "sensor_group"
@@ -31,18 +37,22 @@ trace_endpoint  = "http://localhost:4318/v1/traces"
 batch_size      = 3000
 block_ms        = 1000
 retry_delay_sec = 2
-'''
+"""
+
 
 def parse_config_from_text(config_text: bytes) -> AppConfig:
     raw = tomllib.loads(config_text.decode())
     return AppConfig(
-        redis=AppConfig.model_fields['redis'].annotation(**raw["redis"]),
-        postgres=AppConfig.model_fields['postgres'].annotation(**raw["postgres"]),
-        worker=AppConfig.model_fields['worker'].annotation(**raw["worker"]),
+        redis=RedisConfig(**raw["redis"]),
+        postgres=PostgresConfig(**raw["postgres"]),
+        worker=WorkerConfig(**raw["worker"]),
         observability=(
-            ObservabilityConfig(**raw["observability"]) if "observability" in raw else None
+            ObservabilityConfig(**raw["observability"])
+            if "observability" in raw
+            else None
         ),
     )
+
 
 def test_app_config_load_from_text():
     config = parse_config_from_text(CONFIG_TEXT)
